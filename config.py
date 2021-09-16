@@ -8,7 +8,7 @@
 
 # Página de exemplo para exibir erro
 
-listaDeArquivos = ['image.jpeg', 'paginaSimples.html', 'cat.gif']
+listaDeArquivos = ['paginaSimples.html', 'image.jpeg', 'cat.gif']
 
 porta = 8080
 
