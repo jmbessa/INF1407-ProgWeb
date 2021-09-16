@@ -128,16 +128,19 @@ def connHandler(conn):
                     conn.send(f"Content-Type: {contentType}/{extensao}\r\n\r\n".encode())
             
                     # Realiza envio do arquivo pedido
-                    if(extensao in imageTypes):
-                        file = open(f"arquivos/{arquivoComExtensao}", "rb")
-                        fileContent = file.read()
-                        conn.send(fileContent)
-                        file.close()    
-                    else:
-                        file = open(f"arquivos/{arquivoComExtensao}")
-                        fileContent = file.read()
-                        conn.send(fileContent.encode())
-                        file.close()
+                    try:
+                        if(extensao in imageTypes):
+                            file = open(f"arquivos/{arquivoComExtensao}", "rb")
+                            fileContent = file.read()
+                            conn.send(fileContent)
+                            file.close()    
+                        else:
+                            file = open(f"arquivos/{arquivoComExtensao}")
+                            fileContent = file.read()
+                            conn.send(fileContent.encode())
+                            file.close()
+                    except:
+                        print("Erro no envio do arquivo solicitado", file = stderr)
 
                 # Caso o arquivo pedido não esteja disponível, retorna erro 404
                 else:
@@ -147,10 +150,13 @@ def connHandler(conn):
                     conn.send("Content-Type: text/html\n\n".encode())
                     
                     # Realiza envio do "Page Not Found"
-                    file = open(config.pagErro)
-                    fileContent = file.read()
-                    conn.send(fileContent.encode())
-                    file.close()
+                    try:
+                        file = open(config.pagErro)
+                        fileContent = file.read()
+                        conn.send(fileContent.encode())
+                        file.close()
+                    except:
+                        print("Erro no envio do arquivo 'Not Found'", file = stderr)
             
             # Não possui extensão alguma (não é arquivo)
             else:
@@ -160,10 +166,13 @@ def connHandler(conn):
                 conn.send("Content-Type: text/html\n\n".encode())
                 
                 # Realiza envio do "Page Not Found"
-                file = open(config.pagErro)
-                fileContent = file.read()
-                conn.send(fileContent.encode())
-                file.close()
+                try:
+                    file = open(config.pagErro)
+                    fileContent = file.read()
+                    conn.send(fileContent.encode())
+                    file.close()
+                except:
+                    print("Erro no envio do arquivo 'Not Found'", file = stderr)
 
         # Arquivo não especificado, retorna primeiro item da lista
         else:
@@ -196,14 +205,17 @@ def connHandler(conn):
                         conn.send(f"Content-Type: {contentType}/{extensao}\n\n".encode())
 
                         # Realiza envio do arquivo pedido
-                        if(extensao in imageTypes):
-                            file = open(f"arquivos/{arq}", "rb")
-                            fileContent = file.read()
-                            conn.send(fileContent)
-                        else:
-                            file = open(f"arquivos/{arq}")
-                            fileContent = file.read()
-                            conn.send(fileContent.encode())
+                        try:
+                            if(extensao in imageTypes):
+                                file = open(f"arquivos/{arq}", "rb")
+                                fileContent = file.read()
+                                conn.send(fileContent)
+                            else:
+                                file = open(f"arquivos/{arq}")
+                                fileContent = file.read()
+                                conn.send(fileContent.encode())
+                        except:
+                            print("Erro no envio do arquivo solicitado", file = stderr)
                         
                         file.close()
 
@@ -216,10 +228,13 @@ def connHandler(conn):
                     conn.send(f"Content-Type: text/html\r\n\r\n".encode())
 
                     #Realiza envio do "Page Not Found"
-                    file = open(config.pagErro)
-                    fileContent = file.read()
-                    conn.send(fileContent.encode())
-                    file.close()
+                    try:
+                        file = open(config.pagErro)
+                        fileContent = file.read()
+                        conn.send(fileContent.encode())
+                        file.close()
+                    except:
+                        print("Erro no envio do arquivo 'Not Found'", file = stderr)
 
             # Caso a lista de arquivos esteja vazia
             else:
@@ -229,10 +244,13 @@ def connHandler(conn):
                 conn.send(f"Content-Type: text/html\r\n\r\n".encode())
 
                 #Realiza envio do "Page Not Found"
-                file = open(config.pagErro)
-                fileContent = file.read()
-                conn.send(fileContent.encode())
-                file.close()
+                try:
+                    file = open(config.pagErro)
+                    fileContent = file.read()
+                    conn.send(fileContent.encode())
+                    file.close()
+                except:
+                    print("Erro no envio do arquivo 'Not Found'", file = stderr)
 
     # Caso o método recebido não seja GET, encerra a conexão
     else: 
