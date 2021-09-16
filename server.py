@@ -3,7 +3,9 @@ from socket import getaddrinfo, socket
 from socket import AF_INET, SOCK_STREAM, AI_ADDRCONFIG, AI_PASSIVE
 from socket import IPPROTO_TCP, SOL_SOCKET, SO_REUSEADDR
 from posix import abort
-from os import fork, abort
+from os import fork
+from os import listdir
+from os.path import isfile, join
 import config
 from time import sleep
 
@@ -24,7 +26,7 @@ from time import sleep
 def getEnderecoHost(porta):
     try:
         enderecoHost = getaddrinfo(
-            None, 
+            None,
             porta,
             family = AF_INET, # Tipo de família com a qual o socket se comunica. Nesse caso IPv4
             type = SOCK_STREAM, # Connection-based protocol do tipo TCP
@@ -37,9 +39,9 @@ def getEnderecoHost(porta):
     return enderecoHost
 
 def criaSocket(enderecoServidor):
-    fd = socket(enderecoServidor[0][0], enderecoServidor[0][1]) #realiza a criação do socket
+    fd = socket(enderecoServidor[0][0], enderecoServidor[0][1]) #Realiza a criação do socket
     if not fd:
-        print("Não foi possível criar o socket", file = stderr) #mensagem de erro caso aconteça um erro na criação
+        print("Não foi possível criar o socket", file = stderr)
         abort()
     return fd
 
@@ -65,7 +67,7 @@ def escuta(fd): # Faz com que o servidor passe a aceitar conexões (listen)
     return
 
 def conecta(fd): # Aceita a conexão (pré-requisitos: bound e listen)
-    (con, cliente) = fd.accept() 
+    (con, cliente) = fd.accept()
     print("Servidor conectado com ", cliente)
     return con
 
@@ -81,16 +83,16 @@ def fazTudo(fd):
     return
 
 def connHandler(conn):
-    i = -1 
-    extensao = ""
-    response = ""
-    nomeArquivo = ""
+    extensao = ""   #Extensão do arquivo
+    nomeArquivo = ""    #Nome do arquivo
 
     request = conn.recv(1024).decode('utf-8') # Recebe dados enviados pelo cliente
 
     print("==>", request)
 
-    splittedRequest = request.split(" ")
+    splittedRequest = request.split(" ")    # Separação da request para uma maior facilidade em saber o tipo da requisição, no caso um GET
+
+    files = [f for f in listdir(config.dir) if isfile(join(config.dir, f))] #Pegar todos os arquivos que estão presentes no diretório
 
     if(splittedRequest[0] == "GET"):
         dir = splittedRequest[1]
@@ -99,25 +101,22 @@ def connHandler(conn):
         if(dir != "/"):
             # Possui extensão 
             if("." in dir):
-                # Captura extensao do arquivo requisitado
-                while(dir[i] != "."):
-                    extensao += dir[i]
-                    i -= 1
-                extensao = extensao[::-1]
 
-                # Captura nome do arquivo requisitado
-                i -= 1
-                while(dir[i] != "/"):
-                    nomeArquivo += dir[i]
-                    i -= 1
-                nomeArquivo = nomeArquivo[::-1]
+                indiceBarra = dir.find("/")
+                indicePonto = dir.find(".")
+
+                #Separação da extensão e do nome do arquivo para serem mostrados no header
+                extensao = dir[indicePonto + 1:]
+                nomeArquivo = dir[indiceBarra + 1:indicePonto]
 
                 arquivoComExtensao = nomeArquivo + "." + extensao
 
                 # Caso o arquivo esteja disponível, realiza o envio dele
-                if(arquivoComExtensao in config.listaDeArquivos):
+                if(arquivoComExtensao in files):
+                    
                     # Identifica o contentType
                     imageTypes = ["jpeg", "jpg", "png", "gif"]
+
                     if(extensao in imageTypes):
                         contentType = "image"
                     else:
@@ -167,48 +166,61 @@ def connHandler(conn):
                 file.close()
 
         # Arquivo não especificado, retorna primeiro item da lista
-        else: 
+        else:
             # Caso a lista não esteja vazia
             if(len(config.listaDeArquivos) > 0):
-                arquivoComExtensao = config.listaDeArquivos[0]
+                
+                for arq in config.listaDeArquivos:
+                    
+                    indicePonto = arq.find(".")
 
-                # Captura extensao do arquivo requisitado
-                while(arquivoComExtensao[i] != "."):
-                    extensao += arquivoComExtensao[i]
-                    i -= 1
-                extensao = extensao[::-1]
+                    extensao = arq[indicePonto + 1:]
 
-                # Captura nome do arquivo requisitado
-                i = 0
-                while(arquivoComExtensao[i] != "."):
-                    nomeArquivo += arquivoComExtensao[i]
-                    i += 1
-                nomeArquivo = nomeArquivo[::-1]
+                    nomeArquivo = arq[:indicePonto]
 
-                # Identifica o contentType
-                imageTypes = ["jpeg", "jpg", "png", "gif"]
-                if(extensao in imageTypes):
-                    contentType = "image"
-                else:
-                    contentType = "text"
+                    arqFound = False
 
-                # Realiza envio do header
-                conn.send("HTTP/1.1 200 OK\n".encode())
-                conn.send("Server: Python-Based Server/1.0\n".encode()) # Inventei
-                conn.send(f"Content-Type: {contentType}/{extensao}\n\n".encode())
+                    # Identifica o contentType
+                    if arq in files:
 
-                # Realiza envio do arquivo pedido
-                if(extensao in imageTypes):
-                    file = open(f"arquivos/{arquivoComExtensao}", "rb")
-                    fileContent = file.read()
-                    conn.send(fileContent)
-                    file.close()    
-                else:
-                    file = open(f"arquivos/{arquivoComExtensao}")
+                        imageTypes = ["jpeg", "jpg", "png", "gif"]
+
+                        if(extensao in imageTypes):
+                            contentType = "image"
+                        else:
+                            contentType = "text"
+
+                        # Realiza envio do header
+                        conn.send("HTTP/1.1 200 OK\n".encode())
+                        conn.send("Server: Python-Based Server/1.0\n".encode()) # Inventei
+                        conn.send(f"Content-Type: {contentType}/{extensao}\n\n".encode())
+
+                        # Realiza envio do arquivo pedido
+                        if(extensao in imageTypes):
+                            file = open(f"arquivos/{arq}", "rb")
+                            fileContent = file.read()
+                            conn.send(fileContent)
+                        else:
+                            file = open(f"arquivos/{arq}")
+                            fileContent = file.read()
+                            conn.send(fileContent.encode())
+                        
+                        file.close()
+
+                        arqFound = True
+                        break
+                
+                if not arqFound:
+                    conn.send("HTTP/1.1 404 Not Found\r\n".encode())
+                    conn.send("Server: Python-Based Server/1.0\r\n".encode()) # Inventei
+                    conn.send(f"Content-Type: text/html\r\n\r\n".encode())
+
+                    #Realiza envio do "Page Not Found"
+                    file = open(config.pagErro)
                     fileContent = file.read()
                     conn.send(fileContent.encode())
                     file.close()
-            
+
             # Caso a lista de arquivos esteja vazia
             else:
                 # Realiza envio do header
@@ -235,18 +247,18 @@ def main():
         porta = int(argv[1])
     else:
         porta = config.porta
-    enderecoHost = getEnderecoHost(porta)
-    fd = criaSocket(enderecoHost)
-    setModo(fd)
-    bindaSocket(fd, porta)
+    enderecoHost = getEnderecoHost(porta)   #Pega o endereço do host através da função
+    fd = criaSocket(enderecoHost)   # Realiza a criação do socket baseado no endereço do host
+    setModo(fd)     #Controla o comportamento do socket
+    bindaSocket(fd, porta)  
     print("Servidor pronto em", enderecoHost)
     escuta(fd)
     while True:
         conn = conecta(fd) # Aceita a conexão (fd) e retorna fd
         pid = fork()
-        if pid == 0:
+        if pid == 0:    #Faz a criação de processos filhos para permitir a conexão de mais de um cliente simultaneamente
             connHandler(conn)
-            #sleep(60) Para testar várias abas abertas (vários clientes)
+            #sleep(10) #Para testar várias abas abertas (vários clientes)
             conn.close()
         else:
             conn.close()
