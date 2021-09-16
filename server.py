@@ -276,7 +276,7 @@ def main():
         pid = fork()
         if pid == 0:    #Faz a criação de processos filhos para permitir a conexão de mais de um cliente simultaneamente
             connHandler(conn)
-            #sleep(10) #Para testar várias abas abertas (vários clientes)
+            #sleep(50) #Para testar várias abas abertas (vários clientes)
             conn.close()
         else:
             conn.close()
