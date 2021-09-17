@@ -7,15 +7,6 @@ from os import fork, abort
 import config
 from time import sleep
 
-# TO-DO
-# Implementar arquivo config.py OK
-# Habilitar multiprocessos no server.py OK
-# Colocar instruções e explicar o que (não) funcionou no relatório
-# Comentar bem o código
-# Entender bem toda a estrutura para a apresentação
-# Verificar necessidade de (mais) tratamentos de erro/msgs de erro
-# 
-
 # CASO1: ARQUIVO FOI ESPECIFICADO E EXISTE
 # CASO2: ARQUIVO FOI ESPECIDIFADO E NÃO EXISTE (404)
 # CASO3: ARQUIVO NÃO FOI ESPECIFICADO E A LISTA NÃO ESTÁ VAZIA
