@@ -9,10 +9,6 @@ from os.path import isfile, join
 import config
 from time import sleep
 
-# CASO1: ARQUIVO FOI ESPECIFICADO E EXISTE
-# CASO2: ARQUIVO FOI ESPECIDIFADO E NÃO EXISTE (404)
-# CASO3: ARQUIVO NÃO FOI ESPECIFICADO E A LISTA NÃO ESTÁ VAZIA
-# CASO4: ARQUIVO NÃO FOI ESPEFICIDADO E A LISTA ESTÁ VAZIA (404)
 
 def getEnderecoHost(porta):
     try:
